@@ -6,7 +6,7 @@ class Command(BaseCommand):
     """Создание суперпользователя."""
 
     def handle(self, *args, **kwargs):
-        phone = '79998887755'
+        phone = '79125059770'
         invite_code = 'Wa14ba'
         code = '1234'
 
