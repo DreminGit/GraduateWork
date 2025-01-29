@@ -4,12 +4,17 @@ from rest_framework.permissions import AllowAny
 
 from users.apps import UsersConfig
 
-from users.views import UserCreateAPIView, UserProfileRetrieveAPIView, UserUpdateAPIView, UserListAPIView
+from users.views import UserCreateAPIView, UserProfileRetrieveAPIView, UserUpdateAPIView, UserListAPIView, \
+    SendCodeAPIView, VerifyCodeAPIView
 
 app_name = UsersConfig.name
 
 urlpatterns = [
     path('login/', UserCreateAPIView.as_view(), name='login'),
+
+    path('send_code/', SendCodeAPIView.as_view(), name='send-code'),
+    path('verify_code/', VerifyCodeAPIView.as_view(), name='verify-code'),
+
     path('users/<int:pk>/', UserProfileRetrieveAPIView.as_view(), name='users_retrieve'),
     path('users/<int:pk>/update/', UserUpdateAPIView.as_view(), name='users_update'),
     path("", UserListAPIView.as_view(), name="user_list"),

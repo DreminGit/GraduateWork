@@ -58,3 +58,11 @@ def send(phone: int, message: str) -> dict:
     """
     api = SmsAero(SMSAERO_EMAIL, SMSAERO_API_KEY)
     return api.send(phone, message)
+
+
+def send_sms_imitation(phone, code):
+    """ Имитация смс-рассылки """
+
+    user = User.objects.get(phone=phone)
+
+    print(f"смс отправлено на номер {phone} с кодом {code}")
