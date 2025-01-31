@@ -10,7 +10,7 @@ class SendCodeSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         """
-        Генерирует код для пользователя и отправляет его
+        Генерирует код для пользователя и отправляет его на email.
         """
         phone = validated_data['phone']
         try:
@@ -79,3 +79,26 @@ class ProfileSerializer(serializers.ModelSerializer):
         # Фильтруем пользователей, у которых activated_invite_code совпадает с invite_code текущего объекта
         user_list = User.objects.filter(activated_invite_code=obj.invite_code)
         return [user.phone for user in user_list]
+
+
+class ActivateInviteCodeSerializer(serializers.Serializer):
+    invite_code = serializers.CharField(max_length=6)
+
+    def validate_invite_code(self, invite_code):
+        """
+        Проверяем существование инвайт-кода в системе.
+        """
+        if not User.objects.filter(invite_code=invite_code).exists():
+            raise serializers.ValidationError("Инвайт-код не существует.")
+        return invite_code
+
+    def save(self, user):
+        """
+        Активируем инвайт-код для текущего пользователя.
+        """
+        invite_code = self.validated_data['invite_code']
+        if user.activated_invite_code:
+            raise serializers.ValidationError("Вы уже активировали инвайт-код.")
+        user.activated_invite_code = invite_code
+        user.save()
+        return user

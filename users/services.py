@@ -64,5 +64,6 @@ def send_sms_imitation(phone, code):
     """ Имитация смс-рассылки """
 
     user = User.objects.get(phone=phone)
+    time.sleep(2)
 
     print(f"смс отправлено на номер {phone} с кодом {code}")
