@@ -6,13 +6,17 @@ class Command(BaseCommand):
     """Создание суперпользователя."""
 
     def handle(self, *args, **kwargs):
-        phone = '79125059770'
-        invite_code = 'Wa14ba'
-        code = '1234'
+        phone = "79125059770"
+        invite_code = "Wa14ba"
+        code = "1234"
 
         # Проверяем, существует ли пользователь с таким номером телефона
         if User.objects.filter(phone=phone).exists():
-            self.stdout.write(self.style.WARNING(f'Суперпользователь с номером {phone} уже существует.'))
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Суперпользователь с номером {phone} уже существует."
+                )
+            )
             return
 
         user = User.objects.create(phone=phone, invite_code=invite_code)
@@ -22,4 +26,4 @@ class Command(BaseCommand):
         user.is_staff = True
         user.is_superuser = True
         user.save()
-        self.stdout.write(self.style.SUCCESS(f'Суперпользователь {phone} был создан.'))
+        self.stdout.write(self.style.SUCCESS(f"Суперпользователь {phone} был создан."))

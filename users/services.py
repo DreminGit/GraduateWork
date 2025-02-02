@@ -7,6 +7,7 @@ from smsaero import SmsAero
 
 from users.models import User
 from config.settings import SMSAERO_EMAIL, SMSAERO_API_KEY
+from users.tasks import cancel_code_activity
 
 
 def generate_invite_code():
@@ -19,10 +20,13 @@ def generate_invite_code():
     code_base = string.digits + string.ascii_letters
     while True:
         # Генерирует случайный код длиной 6 символов
-        invite_code = ''.join([secrets.choice(code_base) for _ in range(6)])
+        invite_code = "".join([secrets.choice(code_base) for _ in range(6)])
 
-        if (any(i.islower() for i in invite_code)) and (any(i.isupper() for i in invite_code)) and sum(
-                i.isdigit() for i in invite_code) >= 2:
+        if (
+            (any(i.islower() for i in invite_code))
+            and (any(i.isupper() for i in invite_code))
+            and sum(i.isdigit() for i in invite_code) >= 2
+        ):
             break
     return invite_code
 
@@ -61,9 +65,11 @@ def send(phone: int, message: str) -> dict:
 
 
 def send_sms_imitation(phone, code):
-    """ Имитация смс-рассылки """
+    """Имитация смс-рассылки"""
 
     user = User.objects.get(phone=phone)
     time.sleep(2)
+
+    cancel_code_activity.apply_async((user.id,), countdown=10 * 60)
 
     print(f"смс отправлено на номер {phone} с кодом {code}")

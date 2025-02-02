@@ -7,12 +7,11 @@ from users.services import send_sms_imitation
 class SendCodeSerializer(serializers.Serializer):
     phone = serializers.CharField(required=True)
 
-
     def create(self, validated_data):
         """
-        Генерирует код для пользователя и отправляет его на email.
+        Генерирует код для пользователя и отправляет его на телефон.
         """
-        phone = validated_data['phone']
+        phone = validated_data["phone"]
         try:
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
@@ -33,25 +32,27 @@ class VerifyCodeSerializer(serializers.Serializer):
         """
         Проверяет email и код.
         """
-        phone = data.get('phone')
-        code = data.get('code')
+        phone = data.get("phone")
+        code = data.get("code")
 
         try:
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
-            raise serializers.ValidationError("Пользователь с таким телефоном не найден.")
+            raise serializers.ValidationError(
+                "Пользователь с таким телефоном не найден."
+            )
 
         if user.code != code:
             raise serializers.ValidationError("Код неверный.")
 
-        data['user'] = user
+        data["user"] = user
         return data
 
     def create(self, validated_data):
         """
         Завершает процесс авторизации.
         """
-        user = validated_data['user']
+        user = validated_data["user"]
         user.clear_code()  # Убираем код после успешной авторизации
         return user
 
@@ -61,17 +62,35 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = "__all__"
+
+    def update(self, instance, validated_data):
+        validated_data.pop("code", None)  # не позволяет обновить четырехзначный код через update
+        validated_data.pop("invite_code", validated_data.get("invite_code"))  # не позволяет обновить инвайт-код
+        return super().update(instance, validated_data)
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     """Сериализатор для профиля пользователя с доп. информацией о рефералах."""
 
-    invited_users = serializers.SerializerMethodField()  # Создаем поле invited_users, которое генерируется методом
+    invited_users = (
+        serializers.SerializerMethodField()
+    )  # Создаем поле invited_users, которое генерируется методом
 
     class Meta:
         model = User
-        fields = ('id', 'phone', 'name', 'last_name', 'invite_code', 'activated_invite_code', 'invited_users', 'code')
+        fields = (
+            "id",
+            "phone",
+            "name",
+            "last_name",
+            "invite_code",
+            "activated_invite_code",
+            "invited_users",
+            "code",
+            "code_created_at",
+            "code_is_active",
+        )
 
     def get_invited_users(self, obj):
         """Метод для получения списка пользователей, которые использовали инвайт-код текущего пользователя."""
@@ -96,9 +115,13 @@ class ActivateInviteCodeSerializer(serializers.Serializer):
         """
         Активируем инвайт-код для текущего пользователя.
         """
-        invite_code = self.validated_data['invite_code']
+        invite_code = self.validated_data["invite_code"]
         if user.activated_invite_code:
             raise serializers.ValidationError("Вы уже активировали инвайт-код.")
+        if invite_code == user.invite_code:
+            raise serializers.ValidationError(
+                "Вы не можете активировать свой инвайт-код"
+            )
         user.activated_invite_code = invite_code
         user.save()
         return user
